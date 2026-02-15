@@ -22,6 +22,14 @@ public class App {
         this.filmDAO = filmDAO;
     }
 
+    public static void main(String[] args) {
+        SessionFactory factory = prepareRelationalDb();
+        App app = new App(factory, new FilmDAO(factory));
+        List<Film> films = app.fetchAllFilms();
+        System.out.println("Загружено фильмов: " + films.size());
+        app.shutdown();
+    }
+
     private List<Film> fetchAllFilms() {
         try (Session session = sessionFactory.getCurrentSession()) {
             session.beginTransaction();
@@ -31,16 +39,10 @@ public class App {
         }
     }
 
-    public static void main(String[] args) {
-        SessionFactory factory = prepareRelationalDb();
-        App app = new App(factory, new FilmDAO(factory));
-        List<Film> films = app.fetchAllFilms();
-        System.out.println("Загружено фильмов: " + films.size());
-        app.shutdown();
-    }
-
     private void shutdown() {
-        if (sessionFactory != null) sessionFactory.close();
+        if (sessionFactory != null && !sessionFactory.isClosed()) {
+            sessionFactory.close();
+        }
     }
 
     private static SessionFactory prepareRelationalDb() {
