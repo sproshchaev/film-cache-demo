@@ -24,7 +24,7 @@ public class Film {
     @Column(name = "rental_rate")
     private BigDecimal rentalRate;
 
-    private BigDecimal rating;  // например, рейтинг фильма
+    private String rating;  // например, рейтинг фильма
 
     @ManyToMany
     @JoinTable(

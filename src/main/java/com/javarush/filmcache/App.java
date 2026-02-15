@@ -32,7 +32,8 @@ public class App {
     }
 
     public static void main(String[] args) {
-        App app = new App(prepareRelationalDb(), new FilmDAO(prepareRelationalDb()));
+        SessionFactory factory = prepareRelationalDb();
+        App app = new App(factory, new FilmDAO(factory));
         List<Film> films = app.fetchAllFilms();
         System.out.println("Загружено фильмов: " + films.size());
         app.shutdown();
@@ -48,9 +49,9 @@ public class App {
         props.put(Environment.DRIVER, "com.p6spy.engine.spy.P6SpyDriver");
         props.put(Environment.URL, "jdbc:p6spy:mysql://localhost:3306/sakila");
         props.put(Environment.USER, "root");
-        props.put(Environment.PASS, "root");
+        props.put(Environment.PASS, "sakila");
         props.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
-        props.put(Environment.HBM2DDL_AUTO, "validate");
+        props.put(Environment.HBM2DDL_AUTO, "none");
         props.put(Environment.STATEMENT_BATCH_SIZE, "100");
 
         return new Configuration()
