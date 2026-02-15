@@ -1,18 +1,45 @@
 package com.javarush.filmcache;
 
+import com.javarush.filmcache.dao.FilmDAO;
 import com.javarush.filmcache.domain.Actor;
 import com.javarush.filmcache.domain.Category;
 import com.javarush.filmcache.domain.Film;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
+import java.util.List;
 import java.util.Properties;
 
 public class App {
 
+    private final SessionFactory sessionFactory;
+    private final FilmDAO filmDAO;
+
+    public App(SessionFactory sessionFactory, FilmDAO filmDAO) {
+        this.sessionFactory = sessionFactory;
+        this.filmDAO = filmDAO;
+    }
+
+    private List<Film> fetchAllFilms() {
+        try (Session session = sessionFactory.getCurrentSession()) {
+            session.beginTransaction();
+            List<Film> films = filmDAO.getAll();
+            session.getTransaction().commit();
+            return films;
+        }
+    }
+
     public static void main(String[] args) {
-        System.out.println("Hello, World!");
+        App app = new App(prepareRelationalDb(), new FilmDAO(prepareRelationalDb()));
+        List<Film> films = app.fetchAllFilms();
+        System.out.println("Загружено фильмов: " + films.size());
+        app.shutdown();
+    }
+
+    private void shutdown() {
+        if (sessionFactory != null) sessionFactory.close();
     }
 
     private static SessionFactory prepareRelationalDb() {
