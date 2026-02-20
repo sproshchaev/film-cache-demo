@@ -52,3 +52,9 @@
 - Redis DTO - класс FilmDetail (плоская структура, готова для кэша)
 - Загружаем фильмы из MySQL, трансформируем в DTO, сохраняем в Redis, тестируем чтение
 ```
+
+3. Окружение
+```bash
+docker run --name mysql-sakila -e MYSQL_ROOT_PASSWORD=sakila -d -p 3306:3306 restsql/mysql-sakila
+docker run -d --name redis -p 6379:6379 redis:6.2-alpine
+```
