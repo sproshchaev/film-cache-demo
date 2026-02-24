@@ -49,7 +49,7 @@ public class Film {
             schema = "sakila",
             name = "film_category",
             joinColumns = @JoinColumn(name = "film_id"),
-            inverseJoinColumns = @JoinColumn(name = "categoty_id")
+            inverseJoinColumns = @JoinColumn(name = "category_id")
     )
     private Set<Category> categories;
 

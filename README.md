@@ -33,7 +33,7 @@
   - actor: actor_id, first_name, last_name
   - film_actor: film_id, actor_id <- many-to-many
   - category: category_id, name
-  - film_category: film_id, categoty_id <- many-to-many
+  - film_category: film_id, category_id <- many-to-many
 
 - Технологический стек:
   - Java 17 
