@@ -1,9 +1,11 @@
 package com.javarush.filmcache;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javarush.filmcache.dao.FilmDAO;
 import com.javarush.filmcache.domain.Actor;
 import com.javarush.filmcache.domain.Category;
 import com.javarush.filmcache.domain.Film;
+import com.javarush.filmcache.redis.FilmDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -12,12 +14,14 @@ import org.hibernate.cfg.Environment;
 
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class App {
 
     private final SessionFactory sessionFactory;
     private final FilmDAO filmDAO;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public App(SessionFactory sessionFactory, FilmDAO filmDAO) {
         this.sessionFactory = sessionFactory;
@@ -31,6 +35,32 @@ public class App {
             session.getTransaction().commit();
             return films;
         }
+    }
+
+    // films -> FilmDetail
+    private List<FilmDetail> transformData(List<Film> films) {
+        return films.stream().map(
+                film -> {
+                    FilmDetail detail = new FilmDetail();
+                    detail.setId(film.getId());
+                    detail.setTitle(film.getTitle());
+                    detail.setDescription(film.getDescription());
+                    detail.setReleaseYear(film.getReleaseYear());
+                    detail.setRentalRate(film.getRentalRate());
+                    detail.setRating(film.getRating());
+
+                    List<String> actorNames = film.getActors().stream()
+                            .map(actor -> actor.getFirstName() + " " + actor.getLastName())
+                            .collect(Collectors.toList());
+                    detail.setActors(actorNames);
+
+                    List<String> categoryNames = film.getCategories().stream()
+                            .map(Category::getName)
+                            .collect(Collectors.toList());
+                    detail.setCategories(categoryNames);
+                    return detail;
+
+                }).collect(Collectors.toList());
     }
 
     public static void main(String[] args) {

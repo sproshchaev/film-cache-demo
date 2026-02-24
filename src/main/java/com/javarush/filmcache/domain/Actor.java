@@ -1,9 +1,11 @@
 package com.javarush.filmcache.domain;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 @Entity
 @Table(schema = "sakila", name ="actor")
+@Data
 public class Actor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
