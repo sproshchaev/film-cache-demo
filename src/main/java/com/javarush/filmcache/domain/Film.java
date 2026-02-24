@@ -33,7 +33,7 @@ public class Film {
 
     // rating
     @Column(name = "rating")
-    private BigDecimal rating;
+    private String rating;
 
     @ManyToMany
     @JoinTable(
