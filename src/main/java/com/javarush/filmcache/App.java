@@ -1,18 +1,50 @@
 package com.javarush.filmcache;
 
+import com.javarush.filmcache.dao.FilmDAO;
 import com.javarush.filmcache.domain.Actor;
 import com.javarush.filmcache.domain.Category;
 import com.javarush.filmcache.domain.Film;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
+import java.util.List;
 import java.util.Properties;
 
+@Slf4j
 public class App {
 
+    private final SessionFactory sessionFactory;
+    private final FilmDAO filmDAO;
+
+    public App(SessionFactory sessionFactory, FilmDAO filmDAO) {
+        this.sessionFactory = sessionFactory;
+        this.filmDAO = filmDAO;
+    }
+
+    private List<Film> fetchAllFilms() {
+        try (Session session = sessionFactory.getCurrentSession()) {
+            session.beginTransaction();
+            List<Film> films = filmDAO.getAll();
+            session.getTransaction().commit();
+            return films;
+        }
+    }
 
     public static void main(String[] args) {
+        SessionFactory factory = prepareRelationalDb();
+        App app = new App(factory, new FilmDAO(factory));
+        List<Film> films = app.fetchAllFilms();
+        log.info("Загружено фильмов: " + films.size());
+        app.shutdown();
+    }
+
+    private void shutdown() {
+        if (sessionFactory != null && !sessionFactory.isClosed()) {
+            sessionFactory.close();
+        }
     }
 
     private static SessionFactory prepareRelationalDb() {
