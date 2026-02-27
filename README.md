@@ -58,3 +58,14 @@
 docker run --name mysql-sakila -e MYSQL_ROOT_PASSWORD=sakila -d -p 3306:3306 restsql/mysql-sakila
 docker run -d --name redis -p 6379:6379 redis:6.2-alpine
 ```
+
+4.Апгрейд проекта
+```angular2html
+1) Предметная область: Фильмы, ТЗ: страны, города, языки
+2) Связи: @ManyToMany, ТЗ: @OneToMany страна -> языки, @ManyToOne город -> страна, @OneToOne страна -> столица.
+3) Проблема N+1: JOIN FETCH, ТЗ: с городами и странами
+4) Кэшируемые данные: плоский DTO FilmDetail, ТЗ: CityCountry(id города, название, население, данные страны, список языков)
+5) Трансформация: Film -> FilmDetail, ТЗ: City -> CityCountry
+6) Ключ в Redis: film:<id>, ТЗ: <id города>
+7) Тестирование: два теста, сравниваем время
+```
