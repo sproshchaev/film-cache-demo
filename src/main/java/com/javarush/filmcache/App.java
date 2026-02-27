@@ -1,11 +1,16 @@
 package com.javarush.filmcache;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javarush.filmcache.dao.FilmDAO;
 import com.javarush.filmcache.domain.Actor;
 import com.javarush.filmcache.domain.Category;
 import com.javarush.filmcache.domain.Film;
 import com.javarush.filmcache.redis.FilmDetail;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisURI;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.sync.RedisStringCommands;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -22,10 +27,12 @@ public class App {
     private final SessionFactory sessionFactory;
     private final FilmDAO filmDAO;
     private final ObjectMapper mapper = new ObjectMapper();
+    private final RedisClient redisClient;
 
     public App(SessionFactory sessionFactory, FilmDAO filmDAO) {
         this.sessionFactory = sessionFactory;
         this.filmDAO = filmDAO;
+        this.redisClient = preparedRedisClient();
     }
 
     private List<Film> fetchAllFilms() {
@@ -37,7 +44,11 @@ public class App {
         }
     }
 
-    // films -> FilmDetail
+    /**
+     * Метод который осуществляет преобразование в денормализованное состояние films -> FilmDetail
+     * @param films
+     * @return List<FilmDetail>
+     */
     private List<FilmDetail> transformData(List<Film> films) {
         return films.stream().map(
                 film -> {
@@ -63,11 +74,53 @@ public class App {
                 }).collect(Collectors.toList());
     }
 
+    /**
+     * docker run -d --name redis -p 6379:6379 redis:6.2-alpine
+     * @return RedisClient
+     */
+    private RedisClient preparedRedisClient() {
+        RedisClient client = RedisClient.create(RedisURI.create("localhost", 6379));
+        try (StatefulRedisConnection<String, String> connection = client.connect()) {
+            log.info("Connected to Redis");
+        }
+        return client;
+    }
+
+    /**
+     * Метод записи данных в Redis
+     * Каждый объект сериализуется в JSON и сохраняется по ключу.
+     * Ключ формируется на основе идентификатора фильма
+     * @param data
+     */
+    private void pushToRedis(List<FilmDetail> data) {
+        // StatefulRedisConnection - соединение с Redis, метод .connect() открывает новое соединение
+        try (StatefulRedisConnection<String, String> connection = redisClient.connect()) {
+            // У соединения вызываем метод .sync(), возвращающий объект реализующий синхронные команды
+            // для работы со строками. Методы set и get
+            RedisStringCommands<String, String> redisStringCommands = connection.sync();
+            for(FilmDetail filmDetail : data) {
+                String key = "film:" + filmDetail.getId();            // film:123
+                String value = mapper.writeValueAsString(filmDetail); // JSON-строка
+                redisStringCommands.set(key, value); // через RedisStringCommands мы записываем в Redis (аналогично HashMap)
+                                                     // redisStringCommands.get(key); // и можем считать RedisStringCommands
+            }
+        } catch (JsonProcessingException e) {
+            log.error("Ощибка записи в Redis" + e);
+        }
+    }
+
+
+
     public static void main(String[] args) {
         SessionFactory factory = prepareRelationalDb();
         App app = new App(factory, new FilmDAO(factory));
+        // Список фильмов из БД
         List<Film> films = app.fetchAllFilms();
-        log.info("Загружено фильмов: " + films.size());
+        // Преобразовали для последующей записи (K,V) в Redis
+        List<FilmDetail> filmDetails = app.transformData(films);
+        app.pushToRedis(filmDetails);
+        // log.info("Загружено фильмов: " + films.size()); // todo разобраться с логером вывод в консоль
+        System.out.println("Загружено фильмов: " + films.size());
         app.shutdown();
     }
 
