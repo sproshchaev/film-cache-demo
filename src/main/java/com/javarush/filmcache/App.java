@@ -119,8 +119,7 @@ public class App {
         // Преобразовали для последующей записи (K,V) в Redis
         List<FilmDetail> filmDetails = app.transformData(films);
         app.pushToRedis(filmDetails);
-        // log.info("Загружено фильмов: " + films.size()); // todo разобраться с логером вывод в консоль
-        System.out.println("Загружено фильмов: " + films.size());
+        log.info("Загружено фильмов: " + films.size());
         app.shutdown();
     }
 
