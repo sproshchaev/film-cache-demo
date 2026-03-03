@@ -147,13 +147,29 @@ class PerformanceTest {
                 }).collect(Collectors.toList());
     }
 
+    /**
+     * Метод prepareRelationalDb() из класса с тестами PerformanceTest
+     * @return
+     */
     private static SessionFactory prepareRelationalDb() {
         Properties properties = new Properties();
         properties.put(Environment.DIALECT, "org.hibernate.dialect.MySQL8Dialect");
         properties.put(Environment.DRIVER, "com.p6spy.engine.spy.P6SpyDriver");
         properties.put(Environment.URL, "jdbc:p6spy:mysql://localhost:3306/sakila");
-        properties.put(Environment.USER, "root"); //todo  Настройка секретов
-        properties.put(Environment.PASS, "sakila");
+
+        //properties.put(Environment.USER, "root");
+        //properties.put(Environment.PASS, "sakila");
+
+        // Второй вариант - читаем USER, PASS из переменных окружения
+        String dbUser = System.getenv("DB_USER");
+        String dbPassword = System.getenv("DB_PASSWORD");
+        if (dbUser == null || dbPassword == null) {
+            throw new RuntimeException("Переменные окружения DB_USER и DB_PASSWORD должны быть заданы");
+        }
+        properties.put(Environment.USER, dbUser);
+        properties.put(Environment.PASS, dbPassword);
+
+
         properties.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
         properties.put(Environment.HBM2DDL_AUTO, "none");
         properties.put(Environment.STATEMENT_BATCH_SIZE, "100");
