@@ -59,7 +59,7 @@ docker run --name mysql-sakila -e MYSQL_ROOT_PASSWORD=sakila -d -p 3306:3306 res
 docker run -d --name redis -p 6379:6379 redis:6.2-alpine
 ```
 
-4.Апгрейд проекта
+4. Апгрейд проекта
 ```angular2html
 1) Предметная область: Фильмы, ТЗ: страны, города, языки
 2) Связи: @ManyToMany, ТЗ: @OneToMany страна -> языки, @ManyToOne город -> страна, @OneToOne страна -> столица.
@@ -68,4 +68,13 @@ docker run -d --name redis -p 6379:6379 redis:6.2-alpine
 5) Трансформация: Film -> FilmDetail, ТЗ: City -> CityCountry
 6) Ключ в Redis: film:<id>, ТЗ: <id города>
 7) Тестирование: два теста, сравниваем время
+```
+
+5. Дополнительный функционал 
+```angular2html
+1) Безопасное хранение логина и пароля:
+   - в propertie-файле 
+   - в переменных окружения требуется настроить значения DB_PASSWORD, DB_USER
+2) Профессиональный бенчмаркинг с JMH
+3) Система миграций Flyway 
 ```

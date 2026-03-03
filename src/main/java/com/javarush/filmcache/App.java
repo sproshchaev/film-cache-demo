@@ -17,6 +17,10 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -134,8 +138,30 @@ public class App {
         properties.put(Environment.DIALECT, "org.hibernate.dialect.MySQL8Dialect");
         properties.put(Environment.DRIVER, "com.p6spy.engine.spy.P6SpyDriver");
         properties.put(Environment.URL, "jdbc:p6spy:mysql://localhost:3306/sakila");
-        properties.put(Environment.USER, "root"); //todo  Настройка секретов
-        properties.put(Environment.PASS, "sakila");
+
+
+        Properties secretProperties = new Properties();
+
+        // Загружаем файл application.properties
+        try (InputStream inputStream = new FileInputStream("application.properties")) {
+            secretProperties.load(inputStream);
+        } catch (IOException e) {
+            throw new RuntimeException("Не удалось загрузить application.properties", e);
+        }
+
+        String dbUser = secretProperties.getProperty("db.user");
+        String dbPassword = secretProperties.getProperty("db.password");
+
+        if (dbUser == null || dbPassword == null) {
+            throw new RuntimeException("В application.properties не найден dbUser или dbPassword!");
+        }
+
+        properties.put(Environment.USER, dbUser);
+        properties.put(Environment.PASS, dbPassword);
+
+//        properties.put(Environment.USER, "root");
+//        properties.put(Environment.PASS, "sakila");
+
         properties.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
         properties.put(Environment.HBM2DDL_AUTO, "none");
         properties.put(Environment.STATEMENT_BATCH_SIZE, "100");
