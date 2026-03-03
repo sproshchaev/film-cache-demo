@@ -12,6 +12,7 @@ import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisStringCommands;
 import lombok.extern.slf4j.Slf4j;
+import org.flywaydb.core.Flyway;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -116,6 +117,8 @@ public class App {
 
 
     public static void main(String[] args) {
+        runMigrations();
+
         SessionFactory factory = prepareRelationalDb();
         App app = new App(factory, new FilmDAO(factory));
         // Список фильмов из БД
@@ -172,6 +175,18 @@ public class App {
                 .addAnnotatedClass(Category.class)
                 .addProperties(properties)
                 .buildSessionFactory();
+    }
+
+    private static void runMigrations() {
+        String dbUser = "root";
+        String dbPassword = "sakila";
+
+        Flyway flyway = Flyway.configure()
+                .dataSource("jdbc:mysql://localhost:3306/sakila", dbUser, dbPassword)
+                .baselineOnMigrate(true)
+                .baselineVersion("0")
+                .load();
+        flyway.migrate();
     }
 
 }
